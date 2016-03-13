@@ -1,6 +1,13 @@
 # usbmux
 A client library to communicate with usbmuxd (USB multiplexer daemon)
 
+## Resources And Implementations
+
+ * https://www.theiphonewiki.com/wiki/Usbmux
+ * https://github.com/libimobiledevice/ - collection of tools and libraries
+ * https://github.com/rcg4u/iphonessh - python
+ * https://github.com/DeMille/node-usbmux/ - node js
+
 ## License
 
 Licensed under either of
