@@ -1,3 +1,6 @@
+//! This crate allows to communicate with usbmuxd (USB multiplexer daemon) which is used to
+//! communicate with iOS devices.
+
 extern crate unix_socket;
 extern crate byteorder;
 extern crate plist;
