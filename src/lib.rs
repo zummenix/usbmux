@@ -11,10 +11,11 @@ extern crate expectest;
 use std::io;
 use std::fmt;
 use std::error;
-use std::collections::BTreeMap;
 use std::time::Duration;
 use unix_socket::UnixStream;
 use plist::Plist;
+
+pub mod requests;
 
 /// Represents connection to usbmuxd.
 pub struct Stream {
@@ -49,13 +50,6 @@ impl Stream {
     pub fn receive_with_timeout(&mut self, timeout: Duration) -> Result<Plist> {
         receive(&mut self.stream, Some(timeout))
     }
-}
-
-/// Creates a `Listen` request for usbmuxd.
-pub fn listen_request() -> Plist {
-    let mut map = BTreeMap::new();
-    map.insert("MessageType".to_owned(), Plist::String("Listen".to_owned()));
-    Plist::Dictionary(map)
 }
 
 /// A Result type alias.
