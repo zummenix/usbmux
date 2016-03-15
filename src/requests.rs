@@ -13,6 +13,11 @@ pub fn list_devices() -> Plist {
     Plist::Dictionary(message_type("ListDevices"))
 }
 
+/// Creates a `ReadBUID` request for usbmuxd.
+pub fn read_buid() -> Plist {
+    Plist::Dictionary(message_type("ReadBUID"))
+}
+
 fn message_type(mtype: &str) -> BTreeMap<String, Plist> {
     let mut map = BTreeMap::new();
     map.insert("MessageType".to_owned(), Plist::String(mtype.to_owned()));
