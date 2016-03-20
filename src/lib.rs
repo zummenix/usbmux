@@ -24,7 +24,7 @@ pub struct Stream {
 
 impl Stream {
     /// Tries to connect to usbmuxd.
-    pub fn connect() -> io::Result<Self> {
+    pub fn connect() -> Result<Self> {
         Ok(Stream {
             inner: try!(UnixStream::connect("/var/run/usbmuxd")),
         })
