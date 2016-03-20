@@ -19,14 +19,14 @@ pub mod requests;
 
 /// Represents connection to usbmuxd.
 pub struct Stream {
-    stream: UnixStream,
+    inner: UnixStream,
 }
 
 impl Stream {
     /// Tries to connect to usbmuxd.
     pub fn connect() -> io::Result<Self> {
         Ok(Stream {
-            stream: try!(UnixStream::connect("/var/run/usbmuxd")),
+            inner: try!(UnixStream::connect("/var/run/usbmuxd")),
         })
     }
 
@@ -35,7 +35,7 @@ impl Stream {
     /// You should call `receive` or `receive_with_timeout` after this call
     /// to get a response from usbmuxd.
     pub fn send(&mut self, plist: Plist) -> Result<()> {
-        send(&mut self.stream, plist)
+        send(&mut self.inner, plist)
     }
 
     /// Tries to receive `plist` data from usbmuxd.
@@ -43,12 +43,12 @@ impl Stream {
     /// This method will block indefinitely waiting for data. If this behaviour
     /// is not desired you can use `receive_with_timeout` method.
     pub fn receive(&mut self) -> Result<Plist> {
-        receive(&mut self.stream, None)
+        receive(&mut self.inner, None)
     }
 
     /// Tries to receive `plist` data from usbmuxd within `timeout` limit.
     pub fn receive_with_timeout(&mut self, timeout: Duration) -> Result<Plist> {
-        receive(&mut self.stream, Some(timeout))
+        receive(&mut self.inner, Some(timeout))
     }
 }
 
