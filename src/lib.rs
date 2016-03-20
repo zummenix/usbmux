@@ -30,25 +30,34 @@ impl Stream {
         })
     }
 
+    /// Sets the send timeout for the stream.
+    ///
+    /// If the provided value is `None`, then `send` calls will block indefinitely.
+    /// It is an error to pass the zero `Duration` to this method.
+    pub fn set_send_tymeout(&mut self, timeout: Option<Duration>) -> Result<()> {
+        Ok(try!(self.inner.set_write_timeout(timeout)))
+    }
+
+    /// Sets the receive timeout for the stream.
+    ///
+    /// If the provided value is `None`, then `receive` calls will block indefinitely.
+    /// It is an error to pass the zero `Duration` to this method.
+    pub fn set_receive_timeout(&mut self, timeout: Option<Duration>) -> Result<()> {
+        Ok(try!(self.inner.set_read_timeout(timeout)))
+    }
+
     /// Tries to send `plist` data to usbmuxd.
     ///
-    /// You should call `receive` or `receive_with_timeout` after this call
-    /// to get a response from usbmuxd.
+    /// After this call you should call `receive` method to get a response from usbmuxd.
     pub fn send(&mut self, plist: Plist) -> Result<()> {
         send(&mut self.inner, plist)
     }
 
     /// Tries to receive `plist` data from usbmuxd.
     ///
-    /// This method will block indefinitely waiting for data. If this behaviour
-    /// is not desired you can use `receive_with_timeout` method.
+    /// Typically this method should be called after `send` method.
     pub fn receive(&mut self) -> Result<Plist> {
-        receive(&mut self.inner, None)
-    }
-
-    /// Tries to receive `plist` data from usbmuxd within `timeout` limit.
-    pub fn receive_with_timeout(&mut self, timeout: Duration) -> Result<Plist> {
-        receive(&mut self.inner, Some(timeout))
+        receive(&mut self.inner)
     }
 }
 
@@ -108,11 +117,9 @@ fn send(stream: &mut UnixStream, plist: Plist) -> Result<()> {
     Ok(try!(stream.write_all(&data)))
 }
 
-fn receive(stream: &mut UnixStream, timeout: Option<Duration>) -> Result<Plist> {
+fn receive(stream: &mut UnixStream) -> Result<Plist> {
     use byteorder::{LittleEndian, ByteOrder};
     use std::io::{Read, Cursor};
-
-    try!(stream.set_read_timeout(timeout));
 
     // Read header and get length of the data.
     // Don't bother to check version and message type. Deserialization
