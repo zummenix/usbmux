@@ -161,10 +161,20 @@ fn prepare_request_data(data: &[u8]) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::prepare_request_data;
+    use std::io;
     use expectest::prelude::*;
 
     #[test]
     fn test_prepare_data() {
         expect!(prepare_request_data(&[1, 2, 3, 4]).iter()).to(have_count(20));
+    }
+
+    #[test]
+    fn test_send_receive_message() {
+        let message = super::requests::listen();
+        let mut buffer = Vec::new();
+        expect!(super::send(&mut buffer, message.clone())).to(be_ok());
+        let mut cursor = io::Cursor::new(buffer);
+        expect!(super::receive(&mut cursor)).to(be_ok().value(message));
     }
 }
