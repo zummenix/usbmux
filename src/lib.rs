@@ -110,16 +110,13 @@ impl From<plist::Error> for Error {
     }
 }
 
-fn send(stream: &mut UnixStream, plist: Plist) -> Result<()> {
-    use std::io::Write;
-
+fn send<W>(stream: &mut W, plist: Plist) -> Result<()> where W: io::Write {
     let data = prepare_request_data(&plist_to_data(plist));
     Ok(try!(stream.write_all(&data)))
 }
 
-fn receive(stream: &mut UnixStream) -> Result<Plist> {
+fn receive<R>(stream: &mut R) -> Result<Plist> where R: io::Read {
     use byteorder::{LittleEndian, ByteOrder};
-    use std::io::{Read, Cursor};
 
     // Read header and get length of the data.
     // Don't bother to check version and message type. Deserialization
@@ -131,7 +128,7 @@ fn receive(stream: &mut UnixStream) -> Result<Plist> {
     let mut data = vec![0; length];
     try!(stream.read_exact(&mut data));
 
-    Ok(try!(Plist::read(Cursor::new(data))))
+    Ok(try!(Plist::read(io::Cursor::new(data))))
 }
 
 /// Converts the `plist` to the raw xml data.
