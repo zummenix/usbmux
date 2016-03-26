@@ -46,14 +46,14 @@ impl Stream {
         Ok(try!(self.inner.set_read_timeout(timeout)))
     }
 
-    /// Tries to send `plist` data to usbmuxd.
+    /// Tries to send a `plist` message to usbmuxd.
     ///
     /// After this call you should call `receive` method to get a response from usbmuxd.
     pub fn send(&mut self, plist: Plist) -> Result<()> {
         send(&mut self.inner, plist)
     }
 
-    /// Tries to receive `plist` data from usbmuxd.
+    /// Tries to receive a message from usbmuxd.
     ///
     /// Typically this method should be called after `send` method.
     pub fn receive(&mut self) -> Result<Plist> {
