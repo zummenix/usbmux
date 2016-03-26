@@ -16,6 +16,8 @@ use unix_socket::UnixStream;
 use plist::Plist;
 
 pub mod requests;
+mod client;
+pub use client::Client;
 
 /// Represents connection to usbmuxd.
 pub struct Stream {
