@@ -25,27 +25,23 @@ impl Client {
 
     /// Returns a list of connected devices.
     pub fn devices(&mut self) -> Result<Vec<Device>> {
-        let plist = try!(self.request(Plist::Dictionary(message_type("ListDevices"))));
-        match plist {
-            Plist::Dictionary(mut dict) => {
-                match dict.remove("DeviceList") {
-                    Some(Plist::Array(array)) => {
-                        let results = array.into_iter().filter_map(|item| {
-                            match item {
-                                Plist::Dictionary(mut dict) => {
-                                    match dict.remove("Properties") {
-                                        Some(plist) => Device::from_plist(plist),
-                                        _ => None,
-                                    }
-                                },
+        let mut plist = try!(self.request(Plist::Dictionary(message_type("ListDevices"))));
+        let mut dict = try!(plist.as_dictionary_mut().ok_or(Error::UnexpectedFormat));
+        match dict.remove("DeviceList") {
+            Some(Plist::Array(array)) => {
+                let results = array.into_iter().filter_map(|item| {
+                    match item {
+                        Plist::Dictionary(mut dict) => {
+                            match dict.remove("Properties") {
+                                Some(plist) => Device::from_plist(plist),
                                 _ => None,
                             }
-                        }).collect();
-                        Ok(results)
-                    },
-                    _ => Err(Error::UnexpectedFormat),
-                }
-            }
+                        },
+                        _ => None,
+                    }
+                }).collect();
+                Ok(results)
+            },
             _ => Err(Error::UnexpectedFormat),
         }
     }
@@ -68,32 +64,14 @@ pub struct Device {
 
 impl Device {
     /// Creates an instance of `Device` from plist.
-    pub fn from_plist(plist: Plist) -> Option<Device> {
-        match plist {
-            Plist::Dictionary(mut dict) => {
-                Some(Device {
-                    device_id: try_opt!(integer(&mut dict, "DeviceID").map(|x| x as u32)),
-                    product_id: try_opt!(integer(&mut dict, "ProductID").map(|x| x as u32)),
-                    location_id: try_opt!(integer(&mut dict, "LocationID").map(|x| x as u32)),
-                    serial_number: try_opt!(string(&mut dict, "SerialNumber")),
-                })
-            },
-            _ => None
-        }
-    }
-}
-
-fn integer(dict: &mut BTreeMap<String, Plist>, key: &str) -> Option<i64> {
-    match try_opt!(dict.remove(key)) {
-        Plist::Integer(v) => Some(v),
-        _ => None
-    }
-}
-
-fn string(dict: &mut BTreeMap<String, Plist>, key: &str) -> Option<String> {
-    match try_opt!(dict.remove(key)) {
-        Plist::String(v) => Some(v),
-        _ => None
+    pub fn from_plist(mut plist: Plist) -> Option<Device> {
+        let mut dict = try_opt!(plist.as_dictionary_mut());
+        Some(Device {
+            device_id: try_opt!(dict.get("DeviceID").and_then(Plist::as_integer).map(|x| x as u32)),
+            product_id: try_opt!(dict.get("ProductID").and_then(Plist::as_integer).map(|x| x as u32)),
+            location_id: try_opt!(dict.get("LocationID").and_then(Plist::as_integer).map(|x| x as u32)),
+            serial_number: try_opt!(dict.get("SerialNumber").and_then(Plist::as_string).map(|s| s.to_owned())),
+        })
     }
 }
 
