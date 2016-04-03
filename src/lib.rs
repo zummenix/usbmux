@@ -7,17 +7,20 @@ extern crate plist;
 #[cfg(test)]
 #[macro_use(expect)]
 extern crate expectest;
+#[macro_use(try_opt)]
+extern crate try_opt;
 
 use std::io;
 use std::fmt;
 use std::error;
 use std::time::Duration;
+use std::collections::BTreeMap;
 use unix_socket::UnixStream;
 use plist::Plist;
 
-pub mod requests;
 mod client;
 pub use client::Client;
+pub use client::Device;
 
 /// Represents connection to usbmuxd.
 pub struct Stream {
@@ -73,6 +76,8 @@ pub enum Error {
     Io(io::Error),
     /// Denotes error that produces plist crate.
     Plist(plist::Error),
+    /// Denotes error when response has unexpected format.
+    UnexpectedFormat,
 }
 
 impl error::Error for Error {
@@ -80,6 +85,7 @@ impl error::Error for Error {
         match *self {
             Error::Io(ref e) => e.description(),
             Error::Plist(ref e) => e.description(),
+            Error::UnexpectedFormat => "unexpected format",
         }
     }
 
@@ -87,6 +93,7 @@ impl error::Error for Error {
         match *self {
             Error::Io(ref e) => Some(e),
             Error::Plist(ref e) => Some(e),
+            Error::UnexpectedFormat => None,
         }
     }
 }
@@ -96,6 +103,7 @@ impl fmt::Display for Error {
         match *self {
             Error::Io(ref e) => e.fmt(f),
             Error::Plist(ref e) => e.fmt(f),
+            Error::UnexpectedFormat => writeln!(f, "unexpected format"),
         }
     }
 }
@@ -110,6 +118,13 @@ impl From<plist::Error> for Error {
     fn from(e: plist::Error) -> Self {
         Error::Plist(e)
     }
+}
+
+/// Convenient function that creates a map with `MessageType` key/value pair.
+pub fn message_type(mtype: &str) -> BTreeMap<String, Plist> {
+    let mut map = BTreeMap::new();
+    map.insert("MessageType".to_owned(), Plist::String(mtype.to_owned()));
+    map
 }
 
 fn send<W>(stream: &mut W, plist: Plist) -> Result<()> where W: io::Write {
@@ -162,9 +177,10 @@ fn prepare_request_data(data: &[u8]) -> Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use super::prepare_request_data;
+    use super::{prepare_request_data, message_type};
     use std::io;
     use expectest::prelude::*;
+    use plist::Plist;
 
     #[test]
     fn test_prepare_data() {
@@ -173,7 +189,7 @@ mod tests {
 
     #[test]
     fn test_send_receive_message() {
-        let message = super::requests::listen();
+        let message = Plist::Dictionary(message_type("Listen"));
         let mut buffer = Vec::new();
         expect!(super::send(&mut buffer, message.clone())).to(be_ok());
         let mut cursor = io::Cursor::new(buffer);
