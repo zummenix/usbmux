@@ -1,6 +1,5 @@
 use std::time::Duration;
 use plist::Plist;
-use std::collections::BTreeMap;
 
 use Stream;
 use Result;
@@ -70,7 +69,7 @@ impl Device {
             device_id: try_opt!(dict.get("DeviceID").and_then(Plist::as_integer).map(|x| x as u32)),
             product_id: try_opt!(dict.get("ProductID").and_then(Plist::as_integer).map(|x| x as u32)),
             location_id: try_opt!(dict.get("LocationID").and_then(Plist::as_integer).map(|x| x as u32)),
-            serial_number: try_opt!(dict.get("SerialNumber").and_then(Plist::as_string).map(|s| s.to_owned())),
+            serial_number: try_opt!(dict.remove("SerialNumber").and_then(Plist::into_string)),
         })
     }
 }
