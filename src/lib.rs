@@ -84,6 +84,8 @@ pub enum Error {
     Plist(plist::Error),
     /// Denotes error when response has unexpected format.
     UnexpectedFormat,
+    DeviceIsNotConnected,
+    PortIsNotAvailable,
 }
 
 impl error::Error for Error {
@@ -92,6 +94,8 @@ impl error::Error for Error {
             Error::Io(ref e) => e.description(),
             Error::Plist(ref e) => e.description(),
             Error::UnexpectedFormat => "unexpected format",
+            Error::DeviceIsNotConnected => "device is not connected",
+            Error::PortIsNotAvailable => "port is not available",
         }
     }
 
@@ -100,6 +104,8 @@ impl error::Error for Error {
             Error::Io(ref e) => Some(e),
             Error::Plist(ref e) => Some(e),
             Error::UnexpectedFormat => None,
+            Error::DeviceIsNotConnected => None,
+            Error::PortIsNotAvailable => None,
         }
     }
 }
@@ -110,6 +116,8 @@ impl fmt::Display for Error {
             Error::Io(ref e) => e.fmt(f),
             Error::Plist(ref e) => e.fmt(f),
             Error::UnexpectedFormat => writeln!(f, "unexpected format"),
+            Error::DeviceIsNotConnected => writeln!(f, "device is not connected"),
+            Error::PortIsNotAvailable => writeln!(f, "port is not available"),
         }
     }
 }

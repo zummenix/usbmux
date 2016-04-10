@@ -40,6 +40,34 @@ impl Client {
             _ => Err(Error::UnexpectedFormat),
         }
     }
+
+    /// Returns `Stream` connected to a `port` of the device.
+    pub fn connection(mut self, device_id: u32, port: u16) -> Result<Stream> {
+        fn byte_swap(v: u16) -> u16 {
+            ((v & 0xFF) << 8) | ((v >> 8) & 0xFF)
+        }
+
+        let mut message = message_type("Connect");
+        message.insert("DeviceID".to_owned(), Plist::Integer(device_id as i64));
+        message.insert("PortNumber".to_owned(), Plist::Integer(byte_swap(port) as i64));
+        let plist = try!(self.stream.request(Plist::Dictionary(message)));
+        match plist.as_dictionary() {
+            Some(dict) => {
+                match dict.get("Number") {
+                    Some(&Plist::Integer(i)) => {
+                        match i {
+                            0 => Ok(self.stream),
+                            2 => Err(Error::DeviceIsNotConnected),
+                            3 => Err(Error::PortIsNotAvailable),
+                            _ => Err(Error::UnexpectedFormat),
+                        }
+                    },
+                    _ => Err(Error::UnexpectedFormat),
+                }
+            },
+            _ => Err(Error::UnexpectedFormat),
+        }
+    }
 }
 
 /// Represents a device.
