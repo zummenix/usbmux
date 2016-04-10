@@ -24,7 +24,7 @@ impl Client {
 
     /// Returns a list of connected devices.
     pub fn devices(&mut self) -> Result<Vec<Device>> {
-        let mut plist = try!(self.request(Plist::Dictionary(message_type("ListDevices"))));
+        let mut plist = try!(self.stream.request(Plist::Dictionary(message_type("ListDevices"))));
         let mut dict = try!(plist.as_dictionary_mut().ok_or(Error::UnexpectedFormat));
         match dict.remove("DeviceList") {
             Some(Plist::Array(array)) => {
@@ -39,12 +39,6 @@ impl Client {
             },
             _ => Err(Error::UnexpectedFormat),
         }
-    }
-
-    /// Sends a request and receives a response.
-    pub fn request(&mut self, message: Plist) -> Result<Plist> {
-        try!(self.stream.send(message));
-        Ok(try!(self.stream.receive()))
     }
 }
 

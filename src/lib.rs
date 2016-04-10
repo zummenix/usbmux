@@ -64,6 +64,12 @@ impl Stream {
     pub fn receive(&mut self) -> Result<Plist> {
         receive(&mut self.inner)
     }
+
+    /// Sends a request and receives a response.
+    pub fn request(&mut self, message: Plist) -> Result<Plist> {
+        try!(self.send(message));
+        Ok(try!(self.receive()))
+    }
 }
 
 /// A Result type alias.
