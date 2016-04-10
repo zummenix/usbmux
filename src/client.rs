@@ -28,16 +28,12 @@ impl Client {
         let mut dict = try!(plist.as_dictionary_mut().ok_or(Error::UnexpectedFormat));
         match dict.remove("DeviceList") {
             Some(Plist::Array(array)) => {
-                let results = array.into_iter().filter_map(|item| {
-                    match item {
-                        Plist::Dictionary(mut dict) => {
-                            match dict.remove("Properties") {
-                                Some(plist) => Device::from_plist(plist),
-                                _ => None,
-                            }
-                        },
-                        _ => None,
-                    }
+                let results = array.into_iter().filter_map(|mut item| {
+                    item.as_dictionary_mut().and_then(|dict| {
+                        dict.remove("Properties").and_then(|plist| {
+                            Device::from_plist(plist)
+                        })
+                    })
                 }).collect();
                 Ok(results)
             },
